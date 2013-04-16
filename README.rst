@@ -12,14 +12,14 @@ for it to work.
 The example provided does one round of a simple ping-pong
 communication with the child process.
 
-Here's how to run the example:
+Here's how to run the example::
 
     go get github.com/tv42/childrpc
     cd $GOPATH/src/github.com/tv42/childrpc/example
     go build
     ./example
 
-You should see something like:
+You should see something like::
 
     2013/04/16 09:33:15 parent mode
     child: 2013/04/16 09:33:15 child mode
