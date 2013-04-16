@@ -1,10 +1,10 @@
 package main
 
 import (
-	"childrpc"
 	"flag"
+	"github.com/tv42/childrpc"
+	"github.com/tv42/moreio"
 	"log"
-	"moreio"
 	"net/rpc"
 	"os"
 )
