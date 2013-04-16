@@ -39,8 +39,7 @@ func parent() {
 	}
 }
 
-// TODO what to use as base type?
-type Echo bool
+type Echo struct{}
 
 func (t *Echo) Echo(arg *string, reply *string) error {
 	*reply = *arg
