@@ -1,11 +1,12 @@
 package childrpc
 
 import (
+	"errors"
 	"fmt"
-	"os"
-	"rpc"
 	"io"
 	"moreio"
+	"net/rpc"
+	"os"
 )
 
 type Child struct {
@@ -15,7 +16,7 @@ type Child struct {
 }
 
 // see rpc.Client.Close
-func (child *Child) Close() os.Error {
+func (child *Child) Close() error {
 	err := child.client.Close()
 	if err != nil {
 		return err
@@ -30,20 +31,20 @@ func (child *Child) Close() os.Error {
 		status := wait.WaitStatus.ExitStatus()
 		if status != 0 {
 			s := fmt.Sprintf("child failed with exit code %d", status)
-			return os.NewError(s)
+			return errors.New(s)
 		}
 	} else if wait.WaitStatus.Signaled() {
 		signal := wait.WaitStatus.Signal()
 		if signal != 0 {
 			s := fmt.Sprintf("child exited due to signal %d", signal)
-			return os.NewError(s)
+			return errors.New(s)
 		}
 	}
 	return nil
 }
 
 // see rpc.Client.Call
-func (child *Child) Call(serviceMethod string, args interface{}, reply interface{}) os.Error {
+func (child *Child) Call(serviceMethod string, args interface{}, reply interface{}) error {
 	return child.client.Call(serviceMethod, args, reply)
 }
 
@@ -52,7 +53,7 @@ func (child *Child) Go(serviceMethod string, args interface{}, reply interface{}
 	return child.client.Go(serviceMethod, args, reply, done)
 }
 
-func RunChild(argv0 string, argv []string, envv []string, dir string, stderr *os.File) (*Child, os.Error) {
+func RunChild(argv0 string, argv []string, envv []string, dir string, stderr *os.File) (*Child, error) {
 	childR, parentW, err := os.Pipe()
 	if err != nil {
 		return nil, err

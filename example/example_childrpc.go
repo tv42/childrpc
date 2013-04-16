@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
-	"rpc"
-	"os"
-	"flag"
 	"childrpc"
+	"flag"
+	"log"
 	"moreio"
+	"net/rpc"
+	"os"
 )
 
 func parent() {
@@ -42,7 +42,7 @@ func parent() {
 // TODO what to use as base type?
 type Echo bool
 
-func (t *Echo) Echo(arg *string, reply *string) os.Error {
+func (t *Echo) Echo(arg *string, reply *string) error {
 	*reply = *arg
 	return nil
 }
