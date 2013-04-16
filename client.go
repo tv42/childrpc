@@ -1,17 +1,14 @@
 package childrpc
 
 import (
-	"errors"
-	"fmt"
 	"github.com/tv42/moreio"
-	"io"
 	"net/rpc"
 	"os"
+	"os/exec"
 )
 
 type Child struct {
-	pid    int
-	socket io.ReadWriteCloser
+	cmd    *exec.Cmd
 	client *rpc.Client
 }
 
@@ -22,23 +19,9 @@ func (child *Child) Close() error {
 		return err
 	}
 
-	wait, err := os.Wait(child.pid, 0)
+	err = child.cmd.Wait()
 	if err != nil {
 		return err
-	}
-
-	if wait.WaitStatus.Exited() {
-		status := wait.WaitStatus.ExitStatus()
-		if status != 0 {
-			s := fmt.Sprintf("child failed with exit code %d", status)
-			return errors.New(s)
-		}
-	} else if wait.WaitStatus.Signaled() {
-		signal := wait.WaitStatus.Signal()
-		if signal != 0 {
-			s := fmt.Sprintf("child exited due to signal %d", signal)
-			return errors.New(s)
-		}
 	}
 	return nil
 }
@@ -54,44 +37,33 @@ func (child *Child) Go(serviceMethod string, args interface{}, reply interface{}
 }
 
 func RunChild(argv0 string, argv []string, envv []string, dir string, stderr *os.File) (*Child, error) {
-	childR, parentW, err := os.Pipe()
+
+	cmd := exec.Command(argv0)
+	cmd.Args = argv
+	cmd.Env = envv
+	cmd.Dir = dir
+	cmd.Stderr = stderr
+
+	parentW, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err
 	}
-	parentR, childW, err := os.Pipe()
+	parentR, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
-	}
-	pid, err := os.ForkExec(argv0, argv, envv, dir,
-		[]*os.File{childR, childW, stderr})
-	if err != nil {
-		childR.Close()
-		parentW.Close()
-		parentR.Close()
-		childW.Close()
-		return nil, nil
 	}
 
-	err = childW.Close()
+	err = cmd.Start()
 	if err != nil {
-		// TODO hoping the child will exit at some point?
-		childR.Close()
 		parentW.Close()
 		parentR.Close()
-		return nil, nil
+		return nil, err
 	}
-	err = childR.Close()
-	if err != nil {
-		// TODO hoping the child will exit at some point?
-		parentW.Close()
-		parentR.Close()
-		return nil, nil
-	}
+
 	parent := moreio.NewReadWriteCloser(parentR, parentW)
 	client := rpc.NewClient(parent)
 	c := Child{
-		pid:    pid,
-		socket: parent,
+		cmd:    cmd,
 		client: client,
 	}
 	return &c, nil
