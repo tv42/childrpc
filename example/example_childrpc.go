@@ -10,7 +10,7 @@ import (
 )
 
 func parent() {
-	log.Stderr("parent mode")
+	log.Println("parent mode")
 	client, err := childrpc.RunChild(
 		// you could put ssh in here
 		"./example",
@@ -20,21 +20,21 @@ func parent() {
 		os.Stderr,
 	)
 	if err != nil {
-		log.Exitf("could not run child: %s", err)
+		log.Fatalf("could not run child: %s", err)
 		return
 	}
 	args := "hello"
 	var reply string
 	err = client.Call("Echo.Echo", &args, &reply)
 	if err != nil {
-		log.Exitf("child call failed: %s", err)
+		log.Fatalf("child call failed: %s", err)
 		return
 	}
-	log.Stderr("got reply", reply)
+	log.Println("got reply", reply)
 
 	err = client.Close()
 	if err != nil {
-		log.Exitf("closing connection to child failed: %s", err)
+		log.Fatalf("closing connection to child failed: %s", err)
 		return
 	}
 }
@@ -48,9 +48,9 @@ func (t *Echo) Echo(arg *string, reply *string) error {
 }
 
 func child() {
-	logger := log.New(os.Stderr, nil, "child: ", log.Ldate|log.Ltime)
+	logger := log.New(os.Stderr, "child: ", log.Ldate|log.Ltime)
 
-	logger.Log("child mode")
+	logger.Println("child mode")
 	echo := new(Echo)
 	rpc.Register(echo)
 	m := moreio.NewReadWriteCloser(os.Stdin, os.Stdout)
