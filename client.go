@@ -3,8 +3,8 @@ package childrpc
 import (
 	"errors"
 	"fmt"
+	"github.com/tv42/moreio"
 	"io"
-	"moreio"
 	"net/rpc"
 	"os"
 )
