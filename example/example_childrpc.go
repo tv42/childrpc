@@ -13,8 +13,8 @@ func parent() {
 	log.Stderr("parent mode")
 	client, err := childrpc.RunChild(
 		// you could put ssh in here
-		"./example-childrpc",
-		[]string{"./example-childrpc", "--child"},
+		"./example",
+		[]string{"./example", "--child"},
 		os.Environ(),
 		".",
 		os.Stderr,
